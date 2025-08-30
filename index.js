@@ -33,10 +33,10 @@ const getFromFactiliza = async (endpointPath, res) => {
     }
 
     // ⚠️ Si Factiliza devuelve error
-    console.error("⚠️ Error de Factiliza:", response.data);
+    console.error("⚠️ Error api pe app:", response.data);
     return res.status(400).json({
       success: false,
-      message: "Error en la respuesta de Factiliza",
+      message: "Error en la respuesta",
       detalle: response.data,
     });
   } catch (err) {
@@ -128,7 +128,7 @@ app.get("/licencia", (req, res) => {
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "🚀 API Factiliza-clon funcionando correctamente",
+    message: "🚀 API Consulta pe-clon funcionando correctamente",
   });
 });
 
@@ -136,5 +136,5 @@ app.get("/", (req, res) => {
  * Iniciar servidor
  */
 app.listen(PORT, () => {
-  console.log(`✅ API Factiliza-clon corriendo en puerto ${PORT}`);
+  console.log(`✅ API Consulta pe-clon corriendo en puerto ${PORT}`);
 });
