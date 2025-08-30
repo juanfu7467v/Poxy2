@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import fetch from "node-fetch";
+import axios from "axios";
 
 dotenv.config();
 
@@ -13,45 +13,38 @@ app.use(cors());
 app.use(express.json());
 
 /**
- * Función para consultar Factiliza con manejo de errores
+ * Función para consultar Factiliza con manejo correcto del token
  */
 const getFromFactiliza = async (endpointPath, res) => {
   try {
-    const url = `https://api.factiliza.com/v1${endpointPath}?token=${TOKEN}`;
+    const url = `https://api.factiliza.com/v1${endpointPath}`;
     console.log("🔗 Solicitando:", url);
 
-    const response = await fetch(url);
-    const contentType = response.headers.get("content-type");
-    let data;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    });
 
-    if (contentType && contentType.includes("application/json")) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      console.error("⚠️ Respuesta no-JSON:", text);
-      return res.status(response.status).json({
-        success: false,
-        message: "Respuesta inesperada desde Factiliza",
-        detalle: text,
-      });
+    // ✅ Si Factiliza responde correctamente
+    if (response.data && response.data.success !== false) {
+      return res.status(200).json(response.data);
     }
 
-    if (response.status !== 200 || data.success === false || data.error) {
-      console.error("⚠️ Error en API Factiliza:", data);
-      return res.status(response.status).json({
-        success: false,
-        message: "Error en la respuesta de Factiliza",
-        detalle: data,
-      });
-    }
-
-    res.status(200).json(data);
-  } catch (err) {
-    console.error(`❌ Error al procesar ${endpointPath}:`, err);
-    res.status(500).json({
+    // ⚠️ Si Factiliza devuelve error
+    console.error("⚠️ Error de Factiliza:", response.data);
+    return res.status(400).json({
       success: false,
-      message: "Error interno en el servidor",
-      detalle: err.message,
+      message: "Error en la respuesta de Factiliza",
+      detalle: response.data,
+    });
+  } catch (err) {
+    console.error(`❌ Error al procesar solicitud para ${endpointPath}:`, err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({
+      success: false,
+      message: "Error interno al procesar la solicitud",
+      detalle: err.response?.data || err.message,
     });
   }
 };
@@ -130,12 +123,12 @@ app.get("/licencia", (req, res) => {
 });
 
 /**
- * Ruta default
+ * Ruta default para probar si el backend está corriendo
  */
 app.get("/", (req, res) => {
   res.json({
     success: true,
-    message: "🚀 API Factiliza-proxy funcionando correctamente",
+    message: "🚀 API Factiliza-clon funcionando correctamente",
   });
 });
 
@@ -143,5 +136,5 @@ app.get("/", (req, res) => {
  * Iniciar servidor
  */
 app.listen(PORT, () => {
-  console.log(`✅ API Factiliza-proxy corriendo en puerto ${PORT}`);
+  console.log(`✅ API Factiliza-clon corriendo en puerto ${PORT}`);
 });
